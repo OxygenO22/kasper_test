@@ -1,11 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-export interface TableItem {
-  id: string;
-  name: string;
-  date: string;
-  value: number;
-}
+import type { TableItem } from '../types/types';
 
 const initialState = {
   data: [] as TableItem[],

@@ -20,13 +20,12 @@ import {
   addItem,
   editItem,
   deleteItem,
-  setSearchQuery,
-  type TableItem,
+  setSearchQuery
 } from "../../store/tableSlice";
 import styles from "./TableComponent.module.scss";
 import type { RootState } from "../../store/store";
 import dayjs from "dayjs";
-import { motion } from "framer-motion";
+import type { TableItem } from "../../types/types";
 
 const { Column } = Table;
 
@@ -82,6 +81,7 @@ const TableComponent = () => {
   const handleCancel = () => {
     setIsModalVisible(false);
     setSubmitError("");
+    form.resetFields();
   }
 
   const handleDelete = (id: string) => {
@@ -89,177 +89,176 @@ const TableComponent = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={styles.container}
-    >
-      <div className={styles.container}>
-        <div className={styles.controls}>
-          <Input
-            placeholder="Поиск..."
-            prefix={<SearchOutlined />}
-            value={searchQuery}
-            onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-            className={styles.search}
-          />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => showModal()}
-          >
-            Добавить
-          </Button>
-        </div>
-        <Table
-          dataSource={filteredData}
-          rowKey="id"
-          className={styles.table}
-          pagination={{
-            pageSize: 4,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} из ${total} записей`,
-            position: ["bottomCenter"],
-          }}
+    <div className={styles.container}>
+      <div className={styles.controls}>
+        <Input
+          placeholder="Поиск..."
+          prefix={<SearchOutlined />}
+          value={searchQuery}
+          onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+          className={styles.search}
+        />
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => showModal()}
         >
-          <Column
-            title="Имя"
-            dataIndex="name"
-            key="name"
-            sorter={(a: TableItem, b: TableItem) =>
-              a.name.localeCompare(b.name)
-            }
-          />
-          <Column
-            title="Дата"
-            dataIndex="date"
-            key="date"
-            sorter={(a, b) =>
-              new Date(a.date).getTime() - new Date(b.date).getTime()
-            }
-            render={(date: string) => dayjs(date).format("DD.MM.YYYY")}
-          />
-          <Column
-            title="Значение"
-            dataIndex="value"
-            key="value"
-            sorter={(a: TableItem, b: TableItem) => a.value - b.value}
-          />
-          <Column
-            title="Действия"
-            key="actions"
-            render={(_: any, record: TableItem) => (
-              <div className={styles.actions}>
-                <Button
-                  icon={<EditOutlined />}
-                  onClick={() => showModal(record)}
-                  className={styles.editBtn}
-                />
-                <Button
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(record.id)}
-                  danger
-                />
-              </div>
-            )}
-          />
-        </Table>
-
-        <Modal
-          title={editingItem ? "Редактировать запись" : "Добавить запись"}
-          open={isModalVisible}
-          onOk={handleOk}
-          onCancel={handleCancel}
-          className={styles.modal}
-        >
-          <Form form={form} layout="vertical">
-            <Form.Item
-              name="name"
-              label="Имя"
-              rules={[
-                { required: true, message: "Обязательное поле" },
-                {
-                  validator: (_, value) => {
-                    if (!/[a-zA-Zа-яА-ЯёЁ]/.test(value)) {
-                      return Promise.reject(
-                        "Должен содержать хотя бы одну букву"
-                      );
-                    }
-                    if (value.trim().length < 2) {
-                      return Promise.reject("Минимум 2 символа");
-                    }
-                    const isDuplicate = data.some(
-                      (item) =>
-                        item.name === value.trim() &&
-                        item.id !== editingItem?.id
-                    );
-                    return isDuplicate
-                      ? Promise.reject("Имя уже существует")
-                      : Promise.resolve();
-                  },
-                },
-                { max: 50, message: "Максимум 50 символов" },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="date"
-              label="Дата"
-              normalize={(value) => value && dayjs(value)}
-              getValueFromEvent={(date) => date}
-              rules={[
-                { required: true, message: "Обязательное поле" },
-                {
-                  validator: (_, value) =>
-                    value && dayjs(value).isValid()
-                      ? Promise.resolve()
-                      : Promise.reject("Некорректная дата"),
-                },
-              ]}
-            >
-              <DatePicker
-                format="DD.MM.YYYY"
-                style={{ width: "100%" }}
-                disabledDate={(current) =>
-                  current && current > dayjs().endOf("day")
-                }
-              />
-            </Form.Item>
-            <Form.Item
-              name="value"
-              label="Значение"
-              rules={[
-                { required: true, message: "Обязательное поле" },
-                {
-                  pattern: /^\d+$/,
-                  message: "Допустимы только целые положительные числа",
-                },
-                {
-                  validator: (_, value) => {
-                    if (isNaN(value)) {
-                      return Promise.reject("Введите корректное число");
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
-            >
-              <InputNumber style={{ width: "100%" }} />
-            </Form.Item>
-          </Form>
-          {submitError && (
-            <Alert
-              message={submitError}
-              type="error"
-              showIcon
-              style={{ marginTop: 16 }}
-            />
-          )}
-        </Modal>
+          Добавить
+        </Button>
       </div>
-    </motion.div>
+      <Table
+        dataSource={filteredData}
+        rowKey="id"
+        pagination={{
+          pageSize: 4,
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} из ${total} записей`,
+          position: ["bottomCenter"],
+        }}
+      >
+        <Column
+          title="Имя"
+          dataIndex="name"
+          key="name"
+          sorter={(a: TableItem, b: TableItem) =>
+            a.name.localeCompare(b.name)
+          }
+        />
+        <Column
+          title="Дата"
+          dataIndex="date"
+          key="date"
+          sorter={(a, b) =>
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          }
+          render={(date: string) => dayjs(date).format("DD.MM.YYYY")}
+        />
+        <Column
+          title="Значение"
+          dataIndex="value"
+          key="value"
+          sorter={(a: TableItem, b: TableItem) => a.value - b.value}
+        />
+        <Column
+          title="Действия"
+          key="actions"
+          render={(_: any, record: TableItem) => (
+            <div className={styles.actions}>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => showModal(record)}
+                className={styles.editBtn}
+              />
+              <Button
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.id)}
+                danger
+              />
+            </div>
+          )}
+        />
+      </Table>
+
+      <Modal
+        title={editingItem ? "Редактировать запись" : "Добавить запись"}
+        open={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={[
+          <Button key="back" onClick={handleCancel}>
+            Отмена
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleOk}>
+            {editingItem ? "Обновить" : "Добавить"}
+          </Button>,
+        ]}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Имя"
+            rules={[
+              { required: true, message: "Обязательное поле" },
+              {
+                validator: (_, value) => {
+                  if (!/[a-zA-Zа-яА-ЯёЁ]/.test(value)) {
+                    return Promise.reject(
+                      "Должен содержать хотя бы одну букву"
+                    );
+                  }
+                  if (value.trim().length < 2) {
+                    return Promise.reject("Минимум 2 символа");
+                  }
+                  const isDuplicate = data.some(
+                    (item) =>
+                      item.name === value.trim() &&
+                      item.id !== editingItem?.id
+                  );
+                  return isDuplicate
+                    ? Promise.reject("Имя уже существует")
+                    : Promise.resolve();
+                },
+              },
+              { max: 50, message: "Максимум 50 символов" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="date"
+            label="Дата"
+            normalize={(value) => value && dayjs(value)}
+            getValueFromEvent={(date) => date}
+            rules={[
+              { required: true, message: "Обязательное поле" },
+              {
+                validator: (_, value) =>
+                  value && dayjs(value).isValid()
+                    ? Promise.resolve()
+                    : Promise.reject("Некорректная дата"),
+              },
+            ]}
+          >
+            <DatePicker
+              format="DD.MM.YYYY"
+              style={{ width: "100%" }}
+              disabledDate={(current) =>
+                current && current > dayjs().endOf("day")
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            name="value"
+            label="Значение"
+            rules={[
+              { required: true, message: "Обязательное поле" },
+              {
+                pattern: /^\d+$/,
+                message: "Допустимы только целые положительные числа",
+              },
+              {
+                validator: (_, value) => {
+                  if (isNaN(value)) {
+                    return Promise.reject("Введите корректное число");
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+        </Form>
+        {submitError && (
+          <Alert
+            message={submitError}
+            type="error"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
+      </Modal>
+    </div>
   );
 };
 
